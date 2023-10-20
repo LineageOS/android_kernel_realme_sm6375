@@ -4060,7 +4060,7 @@ static void _dspp_igcv4_off(struct sde_hw_dspp *ctx, void *cfg)
 }
 
 #ifdef OPLUS_BUG_STABILITY
-extern oplus_dither_enable;
+extern int oplus_dither_enable;
 #endif
 
 void reg_dmav2_setup_dspp_igcv4(struct sde_hw_dspp *ctx, void *cfg)

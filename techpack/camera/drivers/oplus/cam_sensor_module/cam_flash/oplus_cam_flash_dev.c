@@ -681,7 +681,7 @@ int shutdown_flash_notify(struct notifier_block *nb, unsigned long action, void 
 	return rc;
 }
 
-int reigster_flash_shutdown_notifier()
+int reigster_flash_shutdown_notifier(void)
 {
 
 	int rc = 0;
@@ -695,7 +695,7 @@ int reigster_flash_shutdown_notifier()
 	return rc;
 }
 
-int unreigster_flash_shutdown_notifier()
+int unreigster_flash_shutdown_notifier(void)
 {
 	int rc = 0;
 	flash_shutdown.notifier_call = shutdown_flash_notify;
