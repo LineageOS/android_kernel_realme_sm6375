@@ -3135,7 +3135,6 @@ static int msm_lsm_close(struct snd_pcm_substream *substream)
 
 		prtd->lsm_client->started = false;
 	}
-
 	if (prtd->lsm_client->lab_enable && prtd->lsm_client->lab_buffer) {
 		ret = msm_lsm_lab_buffer_alloc(prtd,
 				LAB_BUFFER_DEALLOC);
@@ -3144,7 +3143,6 @@ static int msm_lsm_close(struct snd_pcm_substream *substream)
 				"%s: lab buffer dealloc failed ret %d\n",
 				__func__, ret);
 	}
-
 	/*
 	 * De-register existing sound models
 	 * to free SM and CAL buffer, even if
