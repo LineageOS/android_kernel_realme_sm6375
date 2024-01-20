@@ -622,6 +622,10 @@ int pm_suspend(suspend_state_t state)
 	if (state <= PM_SUSPEND_ON || state >= PM_SUSPEND_MAX)
 		return -EINVAL;
 
+	#ifdef CONFIG_OPLUS_POWER_UTIL
+	oplus_get_rpm_stats();
+	#endif
+
 	pr_info("suspend entry (%s)\n", mem_sleep_labels[state]);
 	error = enter_state(state);
 	if (error) {
@@ -630,6 +634,9 @@ int pm_suspend(suspend_state_t state)
 	} else {
 		suspend_stats.success++;
 	}
+	#ifdef CONFIG_OPLUS_POWER_UTIL
+	oplus_get_rpm_stats();
+	#endif
 	pr_info("suspend exit\n");
 	return error;
 }

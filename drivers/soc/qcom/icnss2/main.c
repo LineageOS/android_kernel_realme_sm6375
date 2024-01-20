@@ -4155,6 +4155,7 @@ out_free_resources:
 	icnss_put_resources(priv);
 out_reset_drvdata:
 	dev_set_drvdata(dev, NULL);
+
 	return ret;
 }
 

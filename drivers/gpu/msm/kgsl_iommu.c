@@ -26,6 +26,12 @@
 #include "kgsl_sharedmem.h"
 #include "kgsl_trace.h"
 
+#ifdef OPLUS_BUG_STABILITY
+#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+#include <soc/oplus/system/oplus_mm_kevent_fb.h>
+#endif
+#endif /*OPLUS_BUG_STABILITY*/
+
 #define _IOMMU_PRIV(_mmu) (&((_mmu)->priv.iommu))
 
 
@@ -683,6 +689,23 @@ static int kgsl_iommu_fault_handler(struct iommu_domain *domain,
 	if (!no_page_fault_log && __ratelimit(&_rs)) {
 		struct kgsl_context *context = kgsl_context_get(device,
 							contextidr);
+		#ifdef OPLUS_BUG_STABILITY
+		#ifdef CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		#ifdef NEED_FEEDBACK_TO_DISPLAY
+		mm_fb_kevent(OPLUS_MM_DIRVER_FB_EVENT_DISPLAY,
+		    OPLUS_DISPLAY_EVENTID_GPU_FAULT,
+		    "kgsl error", MM_FB_KEY_RATELIMIT_1H,
+		    "EventID@@%d$$gpu fault$$pid=%08lx,comm=%d",
+		    OPLUS_MM_DIRVER_FB_EVENT_ID_GPU_FAULT, ptname, comm);
+		#else
+		//feedback to atlas
+		mm_fb_kevent(OPLUS_MM_DIRVER_FB_EVENT_DISPLAY,
+		    OPLUS_DISPLAY_EVENTID_GPU_FAULT,
+		    "gpu fault", MM_FB_KEY_RATELIMIT_1H,
+		    "pid=%08lx,comm=%d", ptname, comm);
+		#endif //NEED_FEEDBACK_TO_DISPLAY
+		#endif //CONFIG_OPLUS_FEATURE_MM_FEEDBACK
+		#endif /*OPLUS_BUG_STABILITY*/
 
 		dev_crit(ctx->kgsldev->dev,
 			"GPU PAGE FAULT: addr = %lX pid= %d name=%s drawctxt=%d context pid = %d\n",

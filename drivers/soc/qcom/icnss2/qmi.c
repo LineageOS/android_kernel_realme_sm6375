@@ -1042,6 +1042,7 @@ int icnss_wlfw_bdf_dnld_send_sync(struct icnss_priv *priv, u32 bdf_type)
 	remaining = fw_entry->size;
 
 bypass_bdf:
+
 	icnss_pr_dbg("Downloading %s: %s, size: %u\n",
 		     icnss_bdf_type_to_str(bdf_type), filename, remaining);
 
@@ -1117,6 +1118,7 @@ err_send:
 	if (bdf_type != ICNSS_BDF_DUMMY)
 		release_firmware(fw_entry);
 err_req_fw:
+
 	if (bdf_type != ICNSS_BDF_REGDB)
 		ICNSS_QMI_ASSERT();
 	kfree(req);

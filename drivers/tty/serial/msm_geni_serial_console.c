@@ -467,6 +467,8 @@ msm_geni_serial_early_console_write(struct console *con, const char *s,
 	__msm_geni_serial_console_write(&dev->port, s, n);
 }
 
+extern bool ext_boot_with_console(void);
+
 static int __init
 msm_geni_serial_earlycon_setup(struct earlycon_device *dev,
 		const char *opt)
@@ -485,6 +487,10 @@ msm_geni_serial_earlycon_setup(struct earlycon_device *dev,
 	int clk_div;
 	unsigned long clk_rate;
 	unsigned long cfg0, cfg1;
+
+	if(!ext_boot_with_console()){
+		return 0;
+	}
 
 	if (!uport->membase) {
 		ret = -ENOMEM;

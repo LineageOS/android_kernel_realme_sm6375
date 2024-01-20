@@ -968,6 +968,8 @@ static void msm_geni_serial_poll_put_char(struct uart_port *uport,
 }
 #endif
 
+extern bool ext_boot_with_console(void);
+
 #if IS_ENABLED(CONFIG_SERIAL_MSM_GENI_CONSOLE) || \
 					IS_ENABLED(CONFIG_CONSOLE_POLL)
 static void msm_geni_serial_wr_char(struct uart_port *uport, int ch)
@@ -1130,6 +1132,10 @@ static int handle_rx_console(struct uart_port *uport,
 	unsigned char *rx_char;
 	struct tty_port *tport;
 	struct msm_geni_serial_port *msm_port = GET_DEV_PORT(uport);
+
+	if(!ext_boot_with_console()){
+		return -EPERM;
+	}
 
 	tport = &uport->state->port;
 	for (i = 0; i < rx_fifo_wc; i++) {
@@ -2906,11 +2912,19 @@ static int msm_geni_console_setup(struct console *co, char *options)
 
 static int console_register(struct uart_driver *drv)
 {
+	if(!ext_boot_with_console()){
+		return 0;
+	}
+
 	return uart_register_driver(drv);
 }
 
 static void console_unregister(struct uart_driver *drv)
 {
+	if(!ext_boot_with_console()){
+		return ;
+	}
+
 	uart_unregister_driver(drv);
 }
 
