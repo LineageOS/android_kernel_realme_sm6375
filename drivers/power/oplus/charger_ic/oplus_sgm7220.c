@@ -206,7 +206,7 @@ struct state_disorder_monitor {
 enum en_gpio_type {
 	EN_CC_MUX = 0,
 	EN_VREG_5V,
-	EN_GPIO_MAX = 3
+	EN_GPIO_MAX = 2
 };
 
 struct en_gpio_item {
