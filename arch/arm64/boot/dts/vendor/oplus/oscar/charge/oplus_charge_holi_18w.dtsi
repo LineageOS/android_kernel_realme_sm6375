@@ -97,6 +97,8 @@
 		pinctrl-names = "typec_inter_active", "typec_inter_sleep";
 		pinctrl-0 = <&typec_inter_active>;
 		pinctrl-1 = <&typec_inter_sleep>;
+
+		typec_port_support;
 	};
 };
 
