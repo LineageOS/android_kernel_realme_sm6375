@@ -258,7 +258,12 @@ static int goodix_config_version_open(struct inode *inode, struct file *file)
 	return single_open(file, proc_data_config_version_read, PDE_DATA(inode));
 }
 
-DECLARE_PROC_OPS(goodix_config_version_proc_fops, goodix_config_version_open, seq_read, NULL, single_release);
+static const struct file_operations goodix_config_version_proc_fops = {
+	.owner = THIS_MODULE,
+	.open = goodix_config_version_open,
+	.read = seq_read,
+	.release = single_release,
+};
 
 int goodix_create_proc(struct touchpanel_data *ts,
 		       struct goodix_proc_operations *goodix_ops)

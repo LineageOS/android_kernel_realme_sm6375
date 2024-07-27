@@ -506,20 +506,13 @@ static int ilitek_tddi_fw_iram_upgrade(u8 *pfw, bool mcu)
 
 static int ilitek_fw_calc_file_crc(u8 *pfw)
 {
-	int i, block_num = 0;
+	int i;
 	u32 ex_addr, data_crc, file_crc;
 
 	for (i = 0; i < ARRAY_SIZE(fbi); i++) {
-		if (fbi[i].len >= MAX_HEX_FILE_SIZE) {
-			ILI_ERR("Content of fw file is invalid. (fbi[%d].len=0x%x)\n",
-				i, fbi[i].len);
-			return -1;
-		}
-
-		if (fbi[i].end <= 4) {
+		if (fbi[i].end == 0) {
 			continue;
 		}
-		block_num++;
 
 		ex_addr = fbi[i].end;
 		data_crc = CalculateCRC32(fbi[i].start, fbi[i].len - 4, pfw);
@@ -532,12 +525,6 @@ static int ilitek_fw_calc_file_crc(u8 *pfw)
 				i, data_crc, file_crc);
 			return -1;
 		}
-	}
-
-	if (fbi[MP].end <= 1 * K || fbi[AP].end <= 1 * K || (block_num == 0)) {
-		ILI_ERR("Content of fw file is broken. fbi[AP].end = 0x%x, fbi[MP].end = 0x%x, block_num = %d\n",
-			fbi[AP].end, fbi[MP].end, block_num);
-		return -1;
 	}
 
 	ILI_INFO("Content of fw file is correct\n");
@@ -1051,5 +1038,3 @@ out:
 
 	return ret;
 }
-
-MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);

@@ -254,7 +254,5 @@ int ft3518_short_test(struct seq_file *s, void *chip_data,
 int ft3518_auto_endoperation(struct seq_file *s, void *chip_data,
 			     struct auto_testdata *focal_testdata, struct test_item_info *p_test_item_info);
 
-int ft3518_rst_autotest(struct seq_file *s, void *chip_data,
-                                  struct auto_testdata *focal_testdata, struct test_item_info *p_test_item_info);
-int ft3518_rstpin_reset(void *chip_data);
+
 #endif /*__FT3518_CORE_H__*/

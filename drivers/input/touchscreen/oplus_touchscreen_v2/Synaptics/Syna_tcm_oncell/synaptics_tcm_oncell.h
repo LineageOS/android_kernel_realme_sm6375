@@ -104,9 +104,6 @@
 #define TOUCH_HOLD_DOWN 0x80
 #define TOUCH_HOLD_UP   0x81
 
-/*S3908 addr high bit is palm flag, 60*/
-#define PALM_FLAG       6
-
 enum test_item_bit {
 	TYPE_TRX_SHORT          = 1,
 	TYPE_TRX_OPEN           = 2,
@@ -205,11 +202,6 @@ enum app_status {
 enum firmware_mode {
 	FW_MODE_BOOTLOADER  = 0,
 	FW_MODE_APPLICATION = 1,
-};
-
-enum palm_mode {
-	PALM_TO_DEFAULT = 0,
-	PALM_TO_SLEEP   = 1,
 };
 
 enum dynamic_config_id {
@@ -422,10 +414,10 @@ struct object_data {
 	unsigned int z;
 	unsigned int tx_pos;
 	unsigned int rx_pos;
-	unsigned int exWidth;
-	unsigned int eyWidth;
-	unsigned int xERatio;
-	unsigned int yERatio;
+	unsigned int exwidth;
+	unsigned int eywidth;
+	unsigned int xeratio;
+	unsigned int yeratio;
 };
 
 struct touch_data {
@@ -504,9 +496,6 @@ struct syna_tcm_data {
 	struct synaptics_proc_operations *syna_ops;
 	struct health_info health_info;
 	struct touchpanel_data *ts;
-#ifndef CONFIG_REMOVE_OPLUS_FUNCTION
-	struct panel_info *panel_data;
-#endif
 
 	/*for syna async work*/
 	struct completion resume_complete;
@@ -561,7 +550,6 @@ struct syna_tcm_data {
 
 	int tp_index;
 	struct monitor_data    *monitor_data;                /*health monitor data*/
-	struct exception_data  *exception_data;                /*health monitor data*/
 	uint8_t *raw_data; /*auto test data*/
 	uint32_t raw_data_size; /*auto test data*/
 	uint8_t  *data_buf;
@@ -572,7 +560,6 @@ struct syna_tcm_data {
 	bool chip_grip_en;
 	uint16_t default_gesture_mask;
 	uint16_t gesture_mask;
-	int identify_state;
 	int freq_point;
 	unsigned int obj_attention;
 	bool *loading_fw;
@@ -588,7 +575,7 @@ struct syna_tcm_data {
 	bool switch_game_rate_support;
 	unsigned int fps_report_rate_num;
 	u32 fps_report_rate_array[FPS_REPORT_NUM];
-	//temperatue data
+	/*temperatue data*/
 	u32 syna_tempepratue[2];
 	unsigned int syna_low_temp_enable;
 	unsigned int syna_low_temp_disable;
@@ -596,11 +583,6 @@ struct syna_tcm_data {
 	struct touchpanel_snr *snr;
 	/*normal config for oplus grip*/
 	int normal_config_version;
-	/*int state check in probe time*/
-	int int_check_in_probe;
-	int int_check_support;
-	int palm_to_sleep_state; /*detect palm need to sleep when device in Screen lock*/
-	int palm_hold_report;
 };
 
 struct device_hcd {

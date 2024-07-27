@@ -52,11 +52,7 @@ static int sec_enable_black_gesture(struct chip_data_s6sy792 *chip_info, int ena
 	TPD_INFO("%s, enable = %d\n", __func__, enable);
 
 	if (enable) {
-		if (chip_info->black_gesture_indep) {
-			touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, chip_info->gesture_mask);
-		} else {
-			touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0xFFFF);
-		}
+		touch_i2c_write_word(chip_info->client, SEC_CMD_WAKEUP_GESTURE_MODE, 0xFFFF);
 		for (i = 0; i < 20; i++) {
 			touch_i2c_write_byte(chip_info->client, SEC_CMD_SET_POWER_MODE, 0x01);
 			sec_mdelay(10);
@@ -176,23 +172,12 @@ static int sec_enable_edge_limit(struct chip_data_s6sy792 *chip_info, int enable
 	unsigned char extra_cmd[3] = {0};
 
 	TPD_INFO("limit_switch is %d\n", enable);
-	if (enable == LANDSCAPE_SCREEN_90) {
-		cmd[0] = 0x01;
-		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd);
-	}  else if (enable == LANDSCAPE_SCREEN_270) {
-		cmd[0] = 0x02;
-		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd);
-	} else {/*portrait*/
-		cmd[0] = 0x00;
-		ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_DIRECTION, 3, cmd);
-	}
 	/*dead zone type 1*/
 	if ((enable == LANDSCAPE_SCREEN_90) || (enable == LANDSCAPE_SCREEN_270))
 		buf[2] = 0x05;
 	else	/*portrait*/
 		buf[2] = 0x14;
 
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
 	/*dead zone type 2*/
 	buf[0] = 0x01;
 	if ((enable == LANDSCAPE_SCREEN_90) || (enable == LANDSCAPE_SCREEN_270)) {
@@ -202,7 +187,6 @@ static int sec_enable_edge_limit(struct chip_data_s6sy792 *chip_info, int enable
 		buf[2] = 0x1E;
 		buf[4] = 0x50;
 	}
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
 	/*long press reject zone*/
 	buf[0] = 0x02;
 	buf[2] = 0x16;
@@ -211,11 +195,10 @@ static int sec_enable_edge_limit(struct chip_data_s6sy792 *chip_info, int enable
 	if ((enable == LANDSCAPE_SCREEN_90) || (enable == LANDSCAPE_SCREEN_270))
 		buf[2] = 0x0F;
 
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
 	extra_cmd[0] = 0x02;
 	extra_cmd[1] = 0x14;
 	extra_cmd[2] = 0x46;
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
+
 	/*large touch reject zone*/
 	buf[0] = 0x03;
 	buf[2] = 0x64;
@@ -223,12 +206,11 @@ static int sec_enable_edge_limit(struct chip_data_s6sy792 *chip_info, int enable
 
 	if ((enable == LANDSCAPE_SCREEN_90) || (enable == LANDSCAPE_SCREEN_270))
 		buf[2] = 0x28;
-
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+	
 	extra_cmd[0] = 0x03;
 	extra_cmd[1] = 0x0F;
 	extra_cmd[2] = 0x10;
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
+
 	/*corner long press reject zone*/
 	buf[0] = 0x04;
 	if ((enable == LANDSCAPE_SCREEN_90) || (enable == LANDSCAPE_SCREEN_270)) {
@@ -238,11 +220,10 @@ static int sec_enable_edge_limit(struct chip_data_s6sy792 *chip_info, int enable
 		buf[2] = 0x32;
 		buf[4] = 0xF0;
 	}
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_AREA, 5, buf);
+
 	extra_cmd[0] = 0x04;
 	extra_cmd[1] = 0x32;
 	extra_cmd[2] = 0x00;
-	ret = touch_i2c_write_block(chip_info->client, SEC_CMD_GRIP_PARA, 3, extra_cmd);
 
 	return ret;
 }
@@ -1631,34 +1612,6 @@ static void sec_rate_white_list_ctrl(void *chip_data, int value)
 	}
 
 }
-
-static void sec_set_gesture_state(void *chip_data, int state)
-{
-	struct chip_data_s6sy792 *chip_info = (struct chip_data_s6sy792 *)chip_data;
-	uint16_t state_inchip = 0;
-
-	SET_GESTURE_BIT(state, DOU_TAP, state_inchip, GESTURE_DOUBLECLICK_BIT);
-	SET_GESTURE_BIT(state, UP_VEE, state_inchip, GESTURE_UP_V_BIT);
-	SET_GESTURE_BIT(state, DOWN_VEE, state_inchip, GESTURE_DOWN_V_BIT);
-	SET_GESTURE_BIT(state, LEFT_VEE, state_inchip, GESTURE_LEFT_V_BIT);
-	SET_GESTURE_BIT(state, RIGHT_VEE, state_inchip, GESTURE_RIGHT_V_BIT);
-	SET_GESTURE_BIT(state, CIRCLE_GESTURE, state_inchip, GESTURE_O_BIT);
-	SET_GESTURE_BIT(state, DOWN2UP_SWIP, state_inchip, GESTURE_UP_BIT);
-	SET_GESTURE_BIT(state, RIGHT2LEFT_SWIP, state_inchip, GESTURE_LEFT_BIT);
-	SET_GESTURE_BIT(state, LEFT2RIGHT_SWIP, state_inchip, GESTURE_RIGHT_BIT);
-	SET_GESTURE_BIT(state, M_GESTRUE, state_inchip, GESTURE_M_BIT);
-	SET_GESTURE_BIT(state, W_GESTURE, state_inchip, GESTURE_W_BIT);
-	SET_GESTURE_BIT(state, SINGLE_TAP, state_inchip, GESTURE_SINGLE_TAP_BIT);
-	SET_GESTURE_BIT(state, S_GESTURE, state_inchip, GESTURE_S_BIT);
-	/* gesture '|v' and '||' both use bit15 */
-	if (CHK_BIT(state, (1 << UP2DOWN_SWIP)) || CHK_BIT(state, (1 << DOU_SWIP))) {
-		SET_BIT(state_inchip, (1 << GESTURE_DOWN_BIT));
-	}
-
-	chip_info->gesture_mask = state_inchip;
-	TPD_INFO("%s:state:%d, gesture_mask is 0x%04X !\n", __func__, state, chip_info->gesture_mask);
-}
-
 static int sec_send_temperature(void *chip_data, int temp, bool status)
 {
 	int ret = -1;
@@ -1696,7 +1649,6 @@ static struct oplus_touchpanel_operations sec_ops = {
 #ifdef CONFIG_TOUCHPANEL_ALGORITHM
 	.special_points_report      = sec_get_touch_points_specail,
 #endif
-	.set_gesture_state          = sec_set_gesture_state,
 	.send_temperature			= sec_send_temperature,
 };
 /********* End of implementation of oplus_touchpanel_operations callbacks**********************/
@@ -3335,7 +3287,6 @@ static int sec_tp_probe(struct i2c_client *client, const struct i2c_device_id *i
 	}
 	chip_info->irq_requested = true;
 	ts->tp_suspend_order = TP_LCD_SUSPEND;
-	chip_info->black_gesture_indep = ts->black_gesture_indep_support;
 	chip_info->monitor_data = &ts->monitor_data;
 
 	/*get ts tp_index to chip info*/
@@ -3453,13 +3404,12 @@ int __init tp_driver_init_y792(void)
 	TPD_INFO("%s is called\n", __func__);
 
 	if (!tp_judge_ic_match(TPD_DEVICE)) {
-		TPD_INFO("tp_judge_ic_match fail \n");
-		return 0;
+		return -1;
 	}
 
 	if (i2c_add_driver(&tp_i2c_driver) != 0) {
 		TPD_INFO("unable to add i2c driver.\n");
-		return 0;
+		return -1;
 	}
 
 

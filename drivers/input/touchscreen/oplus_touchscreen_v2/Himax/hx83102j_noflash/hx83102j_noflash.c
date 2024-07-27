@@ -4922,6 +4922,9 @@ RET_OUT:
 	if (rslt_log) {
 		kfree(rslt_log);
 	}
+	if (start_log) {
+		kfree(start_log);
+	}
 	return RESULT_ERR;
 }
 #ifdef HX_CSV_CRITERIA
@@ -6267,8 +6270,7 @@ static bool diag_check_sum(struct chip_data_hx83102j *chip_info) /*return checks
 	int i;
 
 	/*Check 128th byte crc*/
-	check_sum_cal = 0;
-	for (i = 0; i < (chip_info->hx_touch_data->touch_all_size - chip_info->hx_touch_data->touch_info_size); i = i + 2) {
+	for (i = 0, check_sum_cal = 0; i < (chip_info->hx_touch_data->touch_all_size - chip_info->hx_touch_data->touch_info_size); i = i + 2) {
 		check_sum_cal += (chip_info->hx_touch_data->hx_rawdata_buf[i + 1] * 256 + chip_info->hx_touch_data->hx_rawdata_buf[i]);
 	}
 	if (check_sum_cal % 0x10000 != 0) {

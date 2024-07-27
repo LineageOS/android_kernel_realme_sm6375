@@ -236,7 +236,7 @@ static int file_write(struct file_buffer *file, bool new_open)
 
 static int ilitek_debug_node_buff_control(bool open)
 {
-	int i = 0, ret = 0;
+	int i, ret;
 	ilits->dnp = open;
 	ILI_INFO("Debug buf ctrl = %s\n", ilits->dnp ? "Enabled" : "Disabled");
 
@@ -732,7 +732,6 @@ static ssize_t ilitek_proc_debug_switch_read(struct file *pFile,
 
 	memset(g_user_buf, 0, USER_STR_BUFF * sizeof(unsigned char));
 	mutex_lock(&ilits->debug_read_mutex);
-	mutex_lock(&ilits->debug_mutex);
 	open = !ilits->dnp;
 	ilitek_debug_node_buff_control(open);
 	size = snprintf(g_user_buf, USER_STR_BUFF * sizeof(unsigned char), "dnp : %s\n",
@@ -743,7 +742,6 @@ static ssize_t ilitek_proc_debug_switch_read(struct file *pFile,
 		ILI_ERR("Failed to copy data to user space\n");
 	}
 
-	mutex_unlock(&ilits->debug_mutex);
 	mutex_unlock(&ilits->debug_read_mutex);
 	return size;
 }
@@ -2728,7 +2726,7 @@ proc_node iliproc[] = {
 	{"change_list", NULL, &proc_change_list_fops, false},
 };
 
-#define NETLINK_USER 0xff
+#define NETLINK_USER 21
 static struct sock *netlink_skb;
 static struct nlmsghdr *netlink_head;
 static struct sk_buff *skb_out;
@@ -2830,5 +2828,3 @@ void ili_node_init(void)
 
 	netlink_init();
 }
-
-MODULE_IMPORT_NS(VFS_internal_I_am_really_a_filesystem_and_am_NOT_a_driver);

@@ -28,23 +28,6 @@
 #define GESTURE_S                               0x0F
 #define GESTURE_EARSENSE                        0x10
 
-/* black gesture mask bit */
-#define GESTURE_DOUBLECLICK_BIT                 8
-#define GESTURE_UP_V_BIT                        9
-#define GESTURE_DOWN_V_BIT                      10
-#define GESTURE_LEFT_V_BIT                      11
-#define GESTURE_RIGHT_V_BIT                     12
-#define GESTURE_O_BIT                           13
-#define GESTURE_UP_BIT                          14
-#define GESTURE_DOWN_BIT                        15
-#define GESTURE_LEFT_BIT                        0
-#define GESTURE_RIGHT_BIT                       1
-#define GESTURE_M_BIT                           2
-#define GESTURE_W_BIT                           3
-#define GESTURE_DOUBLE_LINE_BIT                 GESTURE_DOWN_BIT
-#define GESTURE_SINGLE_TAP_BIT                  5
-#define GESTURE_S_BIT                           6
-
 #define RESET_TO_NORMAL_TIME                    (70)
 #define SEC_EVENT_BUFF_SIZE                     8
 #define MAX_EVENT_COUNT                         32
@@ -321,9 +304,6 @@ struct chip_data_s6sy792 {
 	u32 debug_gesture_type;
 	//bool water_sta;
 #endif //end of CONFIG_OPLUS_TP_APK
-
-	uint16_t gesture_mask;
-	bool black_gesture_indep;
 
 	uint8_t  *data_buf;
 	uint32_t data_buf_size ;

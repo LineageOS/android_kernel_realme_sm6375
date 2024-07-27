@@ -25,7 +25,7 @@
 #define SYNAPTICS_TCM_ID_VERSION 0x0007
 
 #ifdef CONFIG_TOUCHPANEL_MTK_PLATFORM /*mtk has to limit the amount of data*/
-#define RD_CHUNK_SIZE 2048     /* read length limit in bytes, 0 = unlimited */
+#define RD_CHUNK_SIZE  256     /* read length limit in bytes, 0 = unlimited */
 #define WR_CHUNK_SIZE 2048   /* write length limit in bytes, 0 = unlimited */
 #else
 #define RD_CHUNK_SIZE 0 /* read length limit in bytes, 0 = unlimited */
@@ -36,20 +36,9 @@
 #define MESSAGE_MARKER          0xA5
 #define MESSAGE_PADDING         0x5A
 
-
-/* The external frame data logging */
-#define EXTERNAL_DEBUG_LOGGING
-#ifdef EXTERNAL_DEBUG_LOGGING
-#define REPORT_TYPES		(256)
-#define EDL_ENABLE			(1)
-#define EDL_DISABLE			(0)
-#endif
-
 #define REPORT_TIMEOUT_MS       1000
 #define POWEWRUP_TO_RESET_TIME  10
 #define RESET_TO_NORMAL_TIME    80
-
-#define SYNA_TCM_DIFF_BUF_LENGTH                     3360 /* tx*rx*2 + (tx+rx)*2 */
 
 #define PREDICTIVE_READING
 #define MIN_READ_LENGTH 9
@@ -114,32 +103,6 @@
 
 #define TOUCH_HOLD_DOWN 0x80
 #define TOUCH_HOLD_UP   0x81
-
-#define SYNA_120HZ_REPORT_RATE                   0x02
-#define SYNA_180HZ_REPORT_RATE                   0x04
-#define SYNA_240HZ_REPORT_RATE                   0x03
-#define SYNA_288HZ_REPORT_RATE                   0x05
-#define SYNA_360HZ_REPORT_RATE                   0x01
-#define SYNA_720HZ_REPORT_RATE                   0x09
-
-#define SYNA_GET_RATE_120                        120
-#define SYNA_GET_RATE_240                        10
-#define SYNA_GET_RATE_360                        300
-#define SYNA_GET_RATE_720                        600
-#define SYNA_GET_RATE_180                        180
-
-#define SYNA_WRITE_RATE_120                      120
-#define SYNA_WRITE_RATE_180                      180
-#define SYNA_WRITE_RATE_240                      240
-#define SYNA_WRITE_RATE_288                      288
-#define SYNA_WRITE_RATE_360                      360
-#define SYNA_WRITE_RATE_720                      720
-
-#define INTELLIGENT_GAME_MODE   11
-#define EXTREME_GAME_MODE       12
-
-/*S3910 addr high bit is palm flag, 60*/
-#define PALM_FLAG       6
 
 enum test_item_bit {
 	TYPE_TRX_SHORT          = 1,
@@ -241,11 +204,6 @@ enum firmware_mode {
 	FW_MODE_APPLICATION = 1,
 };
 
-enum palm_mode {
-	PALM_TO_DEFAULT = 0,
-	PALM_TO_SLEEP   = 1,
-};
-
 enum dynamic_config_id {
 	DC_UNKNOWN = 0x00,
 	DC_NO_DOZE,
@@ -282,7 +240,6 @@ enum dynamic_config_id {
 	DC_GRIP_ABS_DARK_V = 0xE4,
 	DC_GRIP_ABS_DARK_SEL = 0xE5,
 	DC_SET_REPORT_FRE = 0xE6,
-	DC_SET_DIFFER_READ = 0xF3,
 	DC_GESTURE_MASK = 0xFE,
 	DC_LOW_TEMP_ENABLE = 0xFD,
 };
@@ -342,7 +299,6 @@ enum report_type {
 	REPORT_RAW          = 0x13,
 	REPORT_DEBUG        = 0x14,
 	REPORT_LOG          = 0x9f,
-	REPORT_DIFF         = 0xaa,
 	REPORT_TOUCH_HOLD   = 0xa0,
 };
 
@@ -368,12 +324,6 @@ enum flash_data {
 	LCM_DATA = 1,
 	OEM_DATA,
 	PPDT_DATA,
-};
-
-enum stretch_status {
-	EDGE_STRETCH_OFF = 0,
-	EDGE_STRETCH_RIGHT,
-	EDGE_STRETCH_LEFT,
 };
 
 struct syna_tcm_buffer {
@@ -532,21 +482,6 @@ struct syna_dc_in_driver {
 	uint16_t g_abs_dark_sel;
 };
 
-struct spi_bus_data {
-	unsigned char *buf;
-	unsigned int buf_size;
-	struct spi_transfer *xfer;
-	unsigned int xfer_count;
-};
-
-#define FP_AREA_RATE_BLACKSCREEN 1024
-
-struct fp_area_rate {
-	unsigned int min;
-	unsigned int max;
-	unsigned int recent;
-};
-
 #define FIRMWARE_MODE_BL_MAX 2
 #define FPS_REPORT_NUM 6
 #define ERROR_STATE_MAX 3
@@ -561,9 +496,7 @@ struct syna_tcm_data {
 	struct synaptics_proc_operations *syna_ops;
 	struct health_info health_info;
 	struct touchpanel_data *ts;
-#ifndef CONFIG_REMOVE_OPLUS_FUNCTION
-	struct panel_info *panel_data;
-#endif
+
 	/*for syna async work*/
 	struct completion resume_complete;
 	/*completion for control fw update*/
@@ -579,15 +512,6 @@ struct syna_tcm_data {
 
 	struct completion      response_complete;
 	struct completion      report_complete;
-
-#ifdef EXTERNAL_DEBUG_LOGGING
-	struct list_head frame_fifo_queue;
-	wait_queue_head_t wait_frame;
-	unsigned int fifo_remaining_frame;
-	unsigned char report_to_queue[REPORT_TYPES];
-	struct mutex fifo_mutex;
-	struct syna_tcm_buffer external_buf;
-#endif
 
 	atomic_t command_status;
 	char *iHex_name;
@@ -657,32 +581,12 @@ struct syna_tcm_data {
 	unsigned int syna_low_temp_disable;
 	bool snr_read_support;
 	struct touchpanel_snr *snr;
-	bool differ_read_every_frame;
-	bool tp_data_record_support;
-	/*normal config for oppo grip*/
+	/*normal config for oplus grip*/
 	int normal_config_version;
 	int gesture_state;
 	bool black_gesture_indep;
 	int block_delay_us;
 	int byte_delay_us;
-
-	struct fp_area_rate fp_area_rate;
-	bool fp_triggered;
-
-	bool charger_connected;
-	int palm_to_sleep_state; /*detect palm need to sleep when device in Screen lock*/
-	int palm_hold_report;
-	int extreme_game_report_rate;
-	bool extreme_game_flag;
-	bool high_resolution_support_x16;
-
-	unsigned int end_of_foreach;
-	struct spi_bus_data spi_data;
-	/*device s3910*/
-	int pre_remaining_frames;
-	bool report_flag;
-	unsigned int offset;
-	unsigned int remaining_size;
 };
 
 struct device_hcd {
@@ -712,16 +616,6 @@ struct device_hcd {
 	int tp_index;
 	int rmidev_major_num;
 };
-
-#ifdef EXTERNAL_DEBUG_LOGGING
-struct syna_tcm_ioctl_data {
-	unsigned int data_length;
-	unsigned int buf_size;
-	unsigned char __user *buf;
-};
-void device_update_report_queue(struct syna_tcm_data *tcm_info,
-		unsigned char code, struct syna_tcm_buffer *pevent_data);
-#endif
 
 static inline int syna_tcm_realloc_mem(struct syna_tcm_buffer *buffer,
 				       unsigned int size)
@@ -792,5 +686,6 @@ int syna_tcm_rmi_write(struct syna_tcm_data *tcm_info,
 		       unsigned short addr, unsigned char *data, unsigned int length);
 */
 extern void tp_fw_auto_reset_handle(struct touchpanel_data *ts);
+
 
 #endif  /*_SYNAPTICS_TCM_CORE_H_*/

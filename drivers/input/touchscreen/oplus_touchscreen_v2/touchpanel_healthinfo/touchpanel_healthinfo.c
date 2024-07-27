@@ -723,7 +723,14 @@ int tp_touch_healthinfo_handle(struct monitor_data *monitor_data,
 	bool is_first_point = false;
 	bool is_jumping_point = false;
 
-
+	//int elizone_points_tophalf_count = 0;
+	//int elizone_points_bothalf_count = 0;
+	//int points_tophalf_count = 0;
+	//int points_bothalf_count = 0;
+	//bool need_record_eli_point_tophalf = false;
+	//bool need_record_eli_point_bothalf = false;
+	//int elizone_point_tophalf_i = -1;
+	//int elizone_point_bothalf_i = -1;
 
 	u64 touch_time = 0;
 
@@ -801,7 +808,7 @@ int tp_touch_healthinfo_handle(struct monitor_data *monitor_data,
 								monitor_data->long_swipe_judge_distance) { /*distance between points changed sunddently when swiping*/
 							add_swipe_to_record(&monitor_data->long_swipes,
 									    monitor_data->points_state[i].last_point, points[i]);
-							TPD_DETAIL("long swipe:[%d %d] to [%d %d], dis:%lu to %lu.\n",
+							TPD_DETAIL("long swipe:[%d %d] to [%d %d], dis:%d to %d.\n",
 								   monitor_data->points_state[i].last_point.x,
 								   monitor_data->points_state[i].last_point.y, points[i].x, points[i].y,
 								   int_sqrt(monitor_data->points_state[i].last_swipe_distance_sq),
@@ -911,19 +918,10 @@ int tp_touch_healthinfo_handle(struct monitor_data *monitor_data,
 					0);
 
 			if (monitor_data->in_game_mode) {
-				if (monitor_data->in_game_mode == REPORT_RATE_GAME_300) {
-					monitor_data->total_touch_time_in_game_300[0] += touch_time;
-					monitor_data->total_touch_time_in_game_300[monitor_data->current_touch_num] +=
-					   touch_time;
-				} else if (monitor_data->in_game_mode == REPORT_RATE_GAME_600) {
-					monitor_data->total_touch_time_in_game_600[0] += touch_time;
-					monitor_data->total_touch_time_in_game_600[monitor_data->current_touch_num] +=
-					   touch_time;
-				} else {
-					monitor_data->total_touch_time_in_game[0] += touch_time;
-					monitor_data->total_touch_time_in_game[monitor_data->current_touch_num] +=
-					   touch_time;
-				}
+				monitor_data->total_touch_time_in_game[0] += touch_time;
+				monitor_data->total_touch_time_in_game[monitor_data->current_touch_num] +=
+					touch_time;
+
 			} else {
 				monitor_data->total_touch_time += touch_time;
 			}
@@ -957,12 +955,12 @@ int tp_gesture_healthinfo_handle(struct monitor_data *monitor_data,
 		return 0;
 	}
 
-	if (monitor_data->is_gesture_waiting_read) {
+	/*if (monitor_data->is_gesture_waiting_read) {
 		update_value_count_list(&monitor_data->invalid_gesture_values_list,
 					&monitor_data->gesture_waiting, TYPE_RECORD_INT);
-	}
+	}*/
 
-	monitor_data->is_gesture_waiting_read = true;
+	/*monitor_data->is_gesture_waiting_read = true;*/
 	reset_healthinfo_time_counter(&monitor_data->gesture_received_time);
 	monitor_data->gesture_waiting = gesture_type;
 
@@ -976,7 +974,7 @@ int tp_gesture_read_healthinfo_handle(struct monitor_data *monitor_data,
 		return 0;
 	}
 
-	if (monitor_data->is_gesture_waiting_read) {
+	/*if (monitor_data->is_gesture_waiting_read) {
 		if (check_healthinfo_time_counter_timeout(monitor_data->gesture_received_time,
 				GESTURE_RESPONSE_TIME) || gesture_type != monitor_data->gesture_waiting) {
 			update_value_count_list(&monitor_data->invalid_gesture_values_list,
@@ -988,7 +986,7 @@ int tp_gesture_read_healthinfo_handle(struct monitor_data *monitor_data,
 		}
 
 		monitor_data->is_gesture_waiting_read = false;
-	}
+	}*/
 
 	return 0;
 }
@@ -1085,12 +1083,12 @@ int tp_resume_healthinfo_handle(struct monitor_data *monitor_data,
 		return 0;
 	}
 
-	if (monitor_data->is_gesture_waiting_read) {
+	/*if (monitor_data->is_gesture_waiting_read) {
 		update_value_count_list(&monitor_data->invalid_gesture_values_list,
 					&monitor_data->gesture_waiting, TYPE_RECORD_INT);
 
 		monitor_data->is_gesture_waiting_read = false;
-	}
+	}*/
 
 	update_max_time(monitor_data, &monitor_data->max_resume_time, start_time);
 
@@ -1202,6 +1200,12 @@ int tp_alloc_healthinfo_handle(struct monitor_data *monitor_data,
 			       long alloc_size, bool alloc_success)
 {
 	int ret = 0;
+	int deep = 2;
+#if IS_BUILTIN(CONFIG_TOUCHPANEL_OPLUS)
+	char *report = NULL;
+	char *func = NULL;
+#endif /*CONFIG_TOUCHPANEL_OPLUS*/
+	struct stackframe frame;
 
 	if (!monitor_data) {
 		return 0;
@@ -1209,8 +1213,8 @@ int tp_alloc_healthinfo_handle(struct monitor_data *monitor_data,
 
 	if (alloc_success) {
 		monitor_data->alloced_size = monitor_data->alloced_size + alloc_size;
-		/* TPD_DETAIL("%ld(%ld) bytes has been alloced.\n", monitor_data->alloced_size,
-			   alloc_size); */
+		TPD_DETAIL("%ld(%ld) bytes has been alloced.\n", monitor_data->alloced_size,
+			   alloc_size);
 
 	} else {
 		if (!monitor_data->max_alloc_err_size && !monitor_data->min_alloc_err_size) {
@@ -1226,6 +1230,54 @@ int tp_alloc_healthinfo_handle(struct monitor_data *monitor_data,
 
 		TPD_INFO("alloc_err_size [%ld - %ld].\n", monitor_data->min_alloc_err_size,
 			 monitor_data->max_alloc_err_size);
+
+		frame.fp = (unsigned long)__builtin_frame_address(0);
+#if LINUX_VERSION_CODE <= KERNEL_VERSION(4, 9, 0)
+		frame.sp = current_stack_pointer;
+#endif
+		frame.pc = (unsigned long)tp_alloc_healthinfo_handle;
+
+#if LINUX_VERSION_CODE < KERNEL_VERSION(5, 15, 0)
+                start_backtrace(&frame,
+                                (unsigned long)__builtin_frame_address(0),
+                                (unsigned long)tp_alloc_healthinfo_handle);
+#endif
+		while (deep--) {
+#if IS_BUILTIN(CONFIG_TOUCHPANEL_OPLUS)
+			ret = unwind_frame(current, &frame);
+#else
+			ret = -1;
+#endif
+			if (ret < 0) {
+				return ret;
+			}
+		}
+#if IS_BUILTIN(CONFIG_TOUCHPANEL_OPLUS)
+		report = tp_kzalloc(DEFAULT_REPORT_STR_LEN, GFP_KERNEL);
+
+		if (report) {
+			TPD_INFO("%pS alloc %ld failed\n", (void *)frame.pc, alloc_size);
+			snprintf(report, DEFAULT_REPORT_STR_LEN, "AllocErr$$Func@@%pS$$Size@@%ld",
+				 (void *)frame.pc, alloc_size);
+			upload_touchpanel_kevent_data(report);
+
+			func = tp_kzalloc(DEFAULT_REPORT_STR_LEN, GFP_KERNEL);
+
+			if (func) {
+				memset(report, 0, DEFAULT_REPORT_STR_LEN);
+				snprintf(report, DEFAULT_REPORT_STR_LEN, "%pS", (void *)frame.pc);
+				strncpy(func, report, strstr(report, "+") - report);
+				update_value_count_list(&monitor_data->alloc_err_funcs_list, func,
+							TYPE_RECORD_STR);
+			}
+
+			tp_kfree((void **)&report);
+			tp_kfree((void **)&func);
+
+		} else {
+			TPD_INFO("alloc report kzalloc failed.\n");
+		}
+#endif /*IS_BUILTIN(CONFIG_TOUCHPANEL_OPLUS)*/
 	}
 
 	return ret;
@@ -1269,12 +1321,12 @@ int tp_voltage_healthinfo_handle(struct monitor_data *monitor_data,
 
 	switch (test_type) {
 	case HEALTH_AVDD:
-		monitor_data->avdd = volt;
+		/*monitor_data->avdd = volt;*/
 		TPD_INFO("AVDD voltage error:%d\n", volt);
 		break;
 
 	case HEALTH_VDDI:
-		monitor_data->vddi = volt;
+		/*monitor_data->vddi = volt;*/
 		TPD_INFO("VDDI voltage error:%d\n", volt);
 		break;
 
@@ -1494,26 +1546,12 @@ int tp_healthinfo_read(struct seq_file *s, void *tp_monitor_data)
 			       PREFIX_HEALTH_REPORT);
 
 	/*abnormal touch and swipe*/
-
-	/*if (monitor_data->point_x_zero_count) {
-		seq_printf(s, "point_x_zero_count:%d\n", monitor_data->point_x_zero_count);
-	}*/
-	/*if (monitor_data->point_x_over_max_count) {
-		seq_printf(s, "point_x_over_max_count:%d\n", monitor_data->point_x_over_max_count);
-	}*/
-	/*if (monitor_data->point_y_zero_count) {
-		seq_printf(s, "point_y_zero_count:%d\n", monitor_data->point_y_zero_count);
-	}*/
-	/*if (monitor_data->point_y_over_max_count) {
-		seq_printf(s, "point_y_over_max_count:%d\n", monitor_data->point_y_over_max_count);
-	}*/
-
-	if (monitor_data->max_jumping_times > JUMPING_POINT_TIMES) {
-		/*seq_printf(s, "max_point-jumping_times:%d\n", monitor_data->max_jumping_times);*/
-		/*print_point_from_record(s, &monitor_data->jumping_points, PREFIX_POINT_JUMPING);*/
+	/*if (monitor_data->max_jumping_times > JUMPING_POINT_TIMES) {
+		seq_printf(s, "max_point-jumping_times:%d\n", monitor_data->max_jumping_times);
+		print_point_from_record(s, &monitor_data->jumping_points, PREFIX_POINT_JUMPING);
 		if (!is_delta_data_allzero(monitor_data->jumping_points_count_array,
 					monitor_data->rx_num / 2, monitor_data->tx_num / 2)) {
-			/*seq_printf(s, "%spoint:", PREFIX_POINT_JUMPING);*/
+			seq_printf(s, "%spoint:", PREFIX_POINT_JUMPING);
 			print_delta_data(s, monitor_data->jumping_points_count_array,
 						monitor_data->rx_num / 2, monitor_data->tx_num / 2);
 		}
@@ -1524,10 +1562,10 @@ int tp_healthinfo_read(struct seq_file *s, void *tp_monitor_data)
 		}
 	}
 
-	/*print_point_from_record(s, &monitor_data->stuck_points, PREFIX_POINT_STUCK);
+	print_point_from_record(s, &monitor_data->stuck_points, PREFIX_POINT_STUCK);
 	print_point_from_record(s, &monitor_data->lanscape_stuck_points,
-				PREFIX_POINT_LANSCAPE_STUCK);*/
-	/*if (!is_delta_data_allzero(monitor_data->stuck_points_count_array,
+				PREFIX_POINT_LANSCAPE_STUCK);
+	if (!is_delta_data_allzero(monitor_data->stuck_points_count_array,
 				monitor_data->rx_num / 2, monitor_data->tx_num / 2)) {
 		seq_printf(s, "%spoint:", PREFIX_POINT_STUCK);
 		print_delta_data(s, monitor_data->stuck_points_count_array, monitor_data->rx_num / 2,
@@ -1551,8 +1589,8 @@ int tp_healthinfo_read(struct seq_file *s, void *tp_monitor_data)
 		seq_printf(s, "%sswipe:", PREFIX_SWIPE_BROKER);
 		print_delta_data(s, monitor_data->broken_swipes_count_array,
 					monitor_data->rx_num / 2, monitor_data->tx_num / 2);
-	}*/
-	/*print_swipe_from_record(s, &monitor_data->broken_swipes, PREFIX_SWIPE_BROKER);
+	}
+	print_swipe_from_record(s, &monitor_data->broken_swipes, PREFIX_SWIPE_BROKER);
 	print_swipe_from_record(s, &monitor_data->long_swipes, PREFIX_SWIPE_SUDDNT_LONG);
 
 	if (monitor_data->smooth_level_chosen) {
@@ -1662,8 +1700,6 @@ int tp_healthinfo_clear(void *tp_monitor_data)
 	monitor_data->total_touch_time = 0;
 	for (i = 0; i <= 10; i++) {
 		monitor_data->total_touch_time_in_game[i] = 0;
-		monitor_data->total_touch_time_in_game_300[i] = 0;
-		monitor_data->total_touch_time_in_game_600[i] = 0;
 	}
 	monitor_data->max_holding_touch_time = 0;
 	monitor_data->max_touch_num = 0;
@@ -1742,7 +1778,7 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 				   &monitor_data->max_finger_support);
 
 	if (ret) {
-		TPD_BOOT_INFO("monitor_data->max_finger_support not specified\n");
+		TPD_INFO("monitor_data->max_finger_support not specified\n");
 		monitor_data->max_finger_support = 10;
 	}
 
@@ -1750,7 +1786,7 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 					 temp_array, 2);
 
 	if (ret) {
-		TPD_BOOT_INFO("tx-rx-num not set\n");
+		TPD_INFO("tx-rx-num not set\n");
 		monitor_data->tx_num = 0;
 		monitor_data->rx_num = 0;
 
@@ -1765,7 +1801,7 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 	if (ret) {
 		monitor_data->max_x = 1080;
 		monitor_data->max_y = 2340;
-		TPD_BOOT_INFO("panel coords using default.\n");
+		TPD_INFO("panel coords using default.\n");
 
 	} else {
 		monitor_data->max_x = temp_array[0];
@@ -1780,7 +1816,7 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 	monitor_data->jumping_point_judge_distance = int_sqrt(monitor_data->max_x *
 				monitor_data->max_x + monitor_data->max_y * monitor_data->max_y) /
 				JUMPING_POINT_JUDGE_RATIO;
-	TPD_BOOT_INFO("long_swipe_judge_distance=%d swipe_broken_judge_distance=%d "
+	TPD_INFO("long_swipe_judge_distance=%d swipe_broken_judge_distance=%d "
 				"jumping_point_judge_distance=%d\n",
 				monitor_data->long_swipe_judge_distance,
 				monitor_data->swipe_broken_judge_distance,
@@ -1792,18 +1828,18 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 	if (ret) {
 		monitor_data->report_rate = 120;
 		monitor_data->report_rate_in_game = 120;
-		TPD_BOOT_INFO("report rate using default.\n");
+		TPD_INFO("report rate using default.\n");
 
 	} else {
 		monitor_data->report_rate = temp_array[0];
 		monitor_data->report_rate_in_game = temp_array[1];
-		TPD_BOOT_INFO("report rate %d-%d.\n", monitor_data->report_rate,
+		TPD_INFO("report rate %d-%d.\n", monitor_data->report_rate,
 					monitor_data->report_rate_in_game);
 	}
 
 	ret = of_property_read_string(dev->of_node, "chip-name", &monitor_data->tp_ic);
 	if (ret) {
-		TPD_BOOT_INFO("failed to get tp ic\n");
+		TPD_INFO("failed to get tp ic\n");
 	}
 
 	monitor_data->fw_version = tp_kzalloc(MAX_DEVICE_VERSION_LENGTH, GFP_KERNEL);
@@ -1891,23 +1927,6 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 		goto err;
 	}
 
-	monitor_data->total_touch_time_in_game_300 = tp_kzalloc(sizeof(u64) *
-			(monitor_data->max_finger_support + 1), GFP_KERNEL);
-
-	if (!monitor_data->total_touch_time_in_game_300) {
-		TPD_INFO("tp_kzalloc total_touch_time_in_game_300 failed.\n");
-		ret = -1;
-		goto err;
-	}
-
-	monitor_data->total_touch_time_in_game_600 = tp_kzalloc(sizeof(u64) *
-			(monitor_data->max_finger_support + 1), GFP_KERNEL);
-
-	if (!monitor_data->total_touch_time_in_game_600) {
-		TPD_INFO("tp_kzalloc total_touch_time_in_game_600 failed.\n");
-		ret = -1;
-		goto err;
-	}
 	/*values list init*/
 	INIT_LIST_HEAD(&monitor_data->gesture_values_list);
 	INIT_LIST_HEAD(&monitor_data->invalid_gesture_values_list);
@@ -1919,8 +1938,8 @@ int tp_healthinfo_init(struct device *dev, void *tp_monitor_data)
 	INIT_LIST_HEAD(&monitor_data->alloc_err_funcs_list);
 	INIT_LIST_HEAD(&monitor_data->fw_update_result_list);
 
-	monitor_data->avdd = VOLTAGE_STATE_DEFAULT;
-	monitor_data->vddi = VOLTAGE_STATE_DEFAULT;
+	//monitor_data->avdd = VOLTAGE_STATE_DEFAULT;
+	//monitor_data->vddi = VOLTAGE_STATE_DEFAULT;
 
 	return 0;
 err:
@@ -1934,8 +1953,6 @@ err:
 	tp_kfree((void **)&monitor_data->lanscape_stuck_points_count_array);
 	tp_kfree((void **)&monitor_data->broken_swipes_count_array);
 	tp_kfree((void **)&monitor_data->total_touch_time_in_game);
-	tp_kfree((void **)&monitor_data->total_touch_time_in_game_300);
-	tp_kfree((void **)&monitor_data->total_touch_time_in_game_600);
 
 	return ret;
 }

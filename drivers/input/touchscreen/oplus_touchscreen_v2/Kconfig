@@ -13,12 +13,6 @@ config TOUCHIRQ_UPDATE_QOS
     help
       Say Y here if you want to update qos value in irq handler.
 
-config TOUCHPANEL_TRUSTED_TOUCH
-	bool "touchpanel Qcom Trusted Touch"
-	help
-	  Say Y here to enable touchpanel Trusted Touch.
-	  If unsure, say N.
-
 config TOUCHPANEL_NEW_SET_IRQ_WAKE
     bool "OPLUS platform tp module used"
     help
@@ -42,11 +36,6 @@ config OPLUS_TP_APK
 
 config REMOVE_OPLUS_FUNCTION
     bool "REMOVE_OPLUS_FUNCTION"
-    help
-      Say Y here if you want to remove all oplus function when bring up.
-
-config TOUCHPANEL_FAULT_INJECT_ENABLE
-    bool "TOUCHPANEL_FAULT_INJECT_ENABLE"
     help
       Say Y here if you want to remove all oplus function when bring up.
 
