@@ -16,6 +16,24 @@
       "message": "```suggestion\n\t\tif ((chip-\u003enu1619_chg_status.dock_version \u003d\u003d DOCK_THIRD) \u0026\u0026 (chip-\u003enu1619_chg_status.adapter_power \u003d\u003d ADAPTER_POWER_20W)) {\n```",
       "revId": "69a72a4cf037e0175db8a114f029d9f2d7ffbf76",
       "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "e2f08677_08ad9a65",
+        "filename": "drivers/power/oplus/wireless_ic/oplus_nu1619.c",
+        "patchSetId": 1
+      },
+      "lineNbr": 4912,
+      "author": {
+        "id": 26672
+      },
+      "writtenOn": "2024-12-25T18:34:32Z",
+      "side": 1,
+      "message": "Done",
+      "parentUuid": "470d2da6_a0070aae",
+      "revId": "69a72a4cf037e0175db8a114f029d9f2d7ffbf76",
+      "serverId": "1ec6b3db-b2c1-4fa4-84a2-4c7efe89ba71"
     }
   ]
 }
